@@ -2,7 +2,7 @@ import re
 
 def get_puzzle(day):
     with open(f"day{day}.txt") as f:
-        return f.readlines()
+        return [line.replace("\n", "") for line in f.readlines()]
 
 def get_puzzle_raw(day):
     with open(f"day{day}.txt") as f:
@@ -129,7 +129,7 @@ def solve_puzzle_4a(input):
             if hgt[2] == "cm":
                 if hgt_num < 150 or hgt_num > 193:
                     continue
-            if hgt[2] == "in":
+            elif hgt[2] == "in":
                 if hgt_num < 59 or hgt_num > 76:
                     continue
             
@@ -137,7 +137,7 @@ def solve_puzzle_4a(input):
             if not hcl:
                 continue
 
-            ecl = re.search('ecl\:[amb|blu|brn|gry|grn|hzl|oth]', passport)
+            ecl = re.search('ecl\:(amb|blu|brn|gry|grn|hzl|oth)', passport)
             if not ecl:
                 continue
 
@@ -152,10 +152,83 @@ def solve_puzzle_4a(input):
     
     return valid
 
+def partitions_to_binary_array(partitions, identifier):
+    return [1 if char == identifier else 0 for char in list(partitions)]
+
+def binary_array_to_int(binary):
+    return int(''.join(map(str, binary)), 2)
+
+def seat_row_col(seat_map):
+    row_binary = partitions_to_binary_array(seat_map[:7], "B")
+    row = binary_array_to_int(row_binary)
+    col_binary = partitions_to_binary_array(seat_map[-3:], "R")
+    col = binary_array_to_int(col_binary)
+    return (row, col)
+
+def seat_id(row, col):
+    return row * 8 + col
+
+def solve_puzzle_5a(input):
+    max = 0
+    for seat_map in input:
+        row, col = seat_row_col(seat_map)
+        id = seat_id(row, col)
+        if id > max:
+            max = id
+
+    return max
+
+def solve_puzzle_5b(input):
+    all_seats = [[False for _ in range(8)] for _ in range(128)]
+    
+    for seat_map in input:
+        row, col = seat_row_col(seat_map)
+        all_seats[row][col] = True
+    
+    return all_seats
+
+def solve_puzzle_6a(input):
+    groups = [group.replace("\n", "") for group in input.split("\n\n")]
+    counts = [len(set(list(group))) for group in groups]
+    return sum(counts)
+
+def all_yes_count(group):
+    group_size = len(group)
+    counts = {}
+    for i in range(ord('a'), ord('z') + 1):
+        counts[chr(i)] = 0
+    for person in group:
+        for yes_char in list(person):
+            counts[yes_char] += 1
+
+    all_yes = 0
+    for v in counts.values():
+        if v == group_size:
+            all_yes += 1
+
+    return all_yes
+
+def solve_puzzle_6b(input):
+    groups = [group.split("\n") for group in input.split("\n\n")]
+    counts = [all_yes_count(group) for group in groups]
+    return sum(counts)
 
 if __name__ == "__main__":
-    input = get_puzzle_raw(4);
-    sample = """byr:1984 pid:876360762 hgt:72cm
-eyr:2040 hcl:a60c15 iyr:1948 ecl:lzr"""
-    answer = solve_puzzle_4a(input)
+    input = get_puzzle_raw(6);
+    sample = """abc
+
+a
+b
+c
+
+ab
+ac
+
+a
+a
+a
+a
+
+b"""
+    answer = solve_puzzle_6b(input)
     print(answer)
